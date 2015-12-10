@@ -1,0 +1,323 @@
+// ENGLISH DESCRIPTIONS
+// By James Veugelaers
+
+
+//
+// Solve basic math
+// 1+2*3+4 = 1+6+4 = 7+4 = 11
+//
+1/
+Solve Using BEDMAS
+/1
+
+
+//
+// Given an equation that can be simplified to get a more precise answer. 
+//
+// Example: 
+// Simplify - 3/2+1     =   3/2 + 2/2   =    (3+2)/2    =     5/2
+// Results  - 5/2
+//
+2/
+Simplify before solving
+/2
+
+
+//
+// Instead of solving an equation where we have something similar to 5(2x+3) where the brackets can not be solved.
+// This is where we want to expand the brackets by moving the 5 in.
+//
+// Example:
+// 2(5x+8) becomes 10x+16 by multiplying the 2 with 5 and multiplying the 2 by 8.
+//
+3/
+Expand before solving
+/3
+
+
+//
+// When no descriptions have been supplied but we have solved something, somehow.
+//
+4/
+Solve
+/4
+
+
+//
+// Message to be displayed when we have finished solving the equation and will now display the results.
+//
+5/
+Final Answer
+/5
+
+
+//
+// If we are given the equation 2x=6
+// And we manage to get the correct answer, we will get the following description
+// 2x is the same as 6 by replacing x with 3.
+// This is because 2*3 = 6.
+//
+// Sometimes we will have more than 1 variable (x). So we need to prepare for this.
+// If we have 2xy=100
+// Then x will be 25 and y will be 2
+// Then the description will be
+// 2xy is the same as 100 by replacing x with 25 and y with 2
+// <1/> original left side of the comparator ( 2x or 2xy )
+// <2/> right of the comparator ( 6 or 100 )
+// <3/> Array of variables ( x,y... etc) that have been given to us. So this can have more than 1.
+//		Each item in the array is accessed by <3[1]>, <3[2]>.... up to how ever many are in it. ( Max count can be found using |<3[]>| )
+//  <4/> Similar to <3/> with being an array. Only instead contains what the variables are replaced with (6,25,2... etx
+6/
+
+"MATH(<1/>) is the same as <2/> by replacing "
+	<LOOP x |<3[]/>|{
+		MATH(<3[/x]/>) with MATH(<4[/x]/>)
+		<IF /x LESSTHAN |<3[]/>| { 
+			" and "
+		}/>
+	}/>.
+/6
+
+
+//
+// Turn an algebra equation into something more readable
+//
+// Example: 
+// 1+x2 will be sorted to 2x+1
+//
+7/
+Sort before solving
+/7
+
+
+//
+// Error to be displayed if we were unable to solve the equation
+// Or we did not solve the equation correctly.
+//
+8/
+Can not solve the equation correctly
+/8
+
+
+
+//
+// Find substitution for x by dividing 10 on both sides.
+//
+// When we have put a variable on 1 side of the equation. 
+// eg: x=25 ( but not 2x=25 as there is a 2 on the same side of the x )
+// Now we are able to replace all representations of the variable with the other side.
+//
+// <1/> will be the variable ( x )
+// <2/> is the operation that it will be applying (+, -, *, /...etc)
+// <3/> other side of x (25, 9.3, (2/3), (55y+7)... etc)  
+//
+9/
+<DEFINE x {'Unknown Operation supplied <2/>'}/>
+
+<IF <2/> EQUALS * {<DEFINE x {multiplying <3/>}/>}
+	ELSE IF <2/> EQUALS / {<DEFINE x {dividing by <3/>}/>}
+	ELSE IF <2/> EQUALS - {<DEFINE x {subtracting <3/>}/>}
+	ELSE IF <2/> EQUALS + {<DEFINE x {adding <3/>}/>}
+	ELSE IF <2/> EQUALS ^ {<DEFINE x {raising <1/> to the power of <3/>}/>}
+	ELSE IF <2/> EQUALS sqrt {
+		<IF <3/> EQUALS 2 {<DEFINE x {getting the squareroot of <1/>}/>}
+		ELSE IF <3/> EQUALS 3 {<DEFINE x {getting the cuberoot of <1/>}/>}
+		ELSE { <DEFINE x {getting the <3/>'th root of <1/>}/> }/>
+	}
+	ELSE IF <2/> EQUALS log {
+		<IF <3/> EQUALS 10 {<DEFINE x {getting the natural logorithm}/>}
+		ELSE {<DEFINE x {getting the <3/>'th log}/>}/>
+	}
+/>
+
+Find substitution for <1/> by </x/> on both sides.
+/9
+
+
+// No Descriptions have been assigned to the equation.
+// This is what is seen as the default Description.
+10/
+No Description
+/10
+
+
+// After finding out what x is. 
+// We want to tell the user what to do with it.
+// e.g: x=(3/2)
+// Replace x with (3/2) in the first equation.  
+//
+// <1/> variable name
+// <2/> what to replace it with eg: ( 99, 22.5, (3/2)...etc)
+11/
+Replace <1/> with <2/> in the first equation.
+/11
+
+
+//
+// 5=2
+// We are comparing the left side of the equals, with the right side to see if they are the same. 
+// <1/> Left of comparator
+// <2/> Right of comparator
+//
+19/
+Compare <1/> with <2/> to see if they are the same.
+/19
+
+
+//
+// 5<2
+// We are comparing the left side of the <, with the right side to see if the left is less than the right. 
+// <1/> Left of comparator
+// <2/> Right of comparator
+//
+20/
+Compare <1/> with <2/> to see if <1/> is less than <2/>.
+/20
+
+
+//
+// 5>2
+// We are comparing the left side of the >, with the  right side to see if the left is greater than the right. 
+// <1/> Left of comparator
+// <2/> Right of comparator
+//
+21/
+Compare <1/> with <2/> to see if <1/> is greater than <2/>.
+/21
+
+
+//
+// 5<=2
+// We are comparing the left side of the <=, with the right side to see if the left is less than or the same as the right. 
+// <1/> Left of comparator
+// <2/> Right of comparator
+//
+22/
+Compare <1/> with <2/> to see if <1/> is the same or less than <2/>.
+/22
+
+
+//
+// 5>=2
+// We are comparing the left side of the <=, with the right side to see if the right is greater than or the same as the left.  
+// <1/> Left of comparator
+// <2/> Right of comparator
+//
+23/
+Compare <1/> with <2/> to see if <1/> is the same or greater than <2/>.
+/23
+
+
+//
+// When we have compared using =, <, >, <= or >=
+// And the condition is true (5=5 is true)
+// This will be displayed.
+//
+24/
+TRUE
+/24
+
+
+//
+// When we have compared using =, <, >, <= or >=
+// And the condition is false (5=888 is false)
+// This will be displayed.
+//
+25/
+FALSE
+/25
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//
+//
+// IGNORE THE BELOW DESCRIPTIONS
+// DO NOT CHANGE
+//
+//
+
+
+
+
+
+
+//
+// Testing loop
+// Results: 'TEST 1 2 3 4 5 '
+//
+12/
+TEST <LOOP i 5 {/i }/>
+/12
+
+
+//
+// Testing TRUE if statement
+// Results: 'TEST 1 is less than two yes so we can be happy.'
+//
+13/
+TEST <IF 1 LESSTHAN 2 {1 is less than two yes }/>so we can be happy.
+/13
+
+
+//
+// Testing FALSE If statement
+// Results: 'TEST so we should NOT be happy.'
+//
+14/
+TEST <IF 2 LESSTHAN 1 {This should never display }/>so we should be happy.
+/14
+
+
+//
+// Testing loop
+// Results: 'TEST 1 '
+//
+15/
+TEST <LOOP i 1 {/i }/>
+/15
+
+
+//
+// Testing defining
+// Results: 'TEST Words'
+//
+16/
+TEST <DEFINE x {Words}/></x/>
+/16
+
+
+//
+// Testing defining on multiply lines
+// Results: 'TEST Hello World'
+//
+17/
+TEST <DEFINE x {Hello}/></x/> <DEFINE x {World}/></x/>
+/17
+
+
+//
+// Testing the new line tag
+// Results: 
+//   'TEST ONE
+//    TEST TWO
+//
+//    TEST THREE'
+//
+18/
+TEST ONE<NEWLINE/>
+TEST TWO<NEWLINE/><NEWLINE/>
+TEST THREE Hello
+/18

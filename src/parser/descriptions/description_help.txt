@@ -1,0 +1,46 @@
+------------------------
+------------------------
+1. Introduction
+------------------------
+------------------------
+In order for the program to determine what descriptions to use when solving an equation. The program picks the most relevant description to use after solving certain equations.
+
+Example:
+We are given the equation: 5x=50
+So in this equation we will try to find out what x is.
+The program will find out what x is by displaying each step it does in order to find out what x is.
+After this, the program will attempt to prove that it found out what x is, correctly.
+
+The program will display the following information:
+----
+5x=50
+Find substitution for x by dividing 5 on both sides
+
+(5x)/5=50/5
+Solve using BEDMAS
+
+x=10
+Replace x with 10 in first entry
+
+5*10=50
+Solve Using BEDMAS
+
+50=50
+Compare 50 with 50
+
+TRUE
+5*x is the same as 50 by replacing x with 10
+---
+
+Each of the steps above shows the equation that we are attempting to solve with highlighted values(not shown in the text file) with what will be solved next. 
+Then underneath the equation will contain the description of what we are doing to the highlighted values.
+
+
+
+------------------------
+------------------------
+2. Desciption Parser Structure
+------------------------
+------------------------
+
+In order to under
