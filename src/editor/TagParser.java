@@ -44,7 +44,7 @@ import parser.descriptions.DescriptionParserException;
 
 public class TagParser extends Application{
 	private TextArea code;
-	private Pane results;
+	private TextArea results;
 	private TextArea errorsTerminal;
 	private TextField descriptionIDField;
 	private TextField inputField;
@@ -315,7 +315,7 @@ public class TagParser extends Application{
 	}
 	
 	public void drawResults(String string){
-		
+		results.setText(string);
 	}
 
 	private String[] getLocalOptions() {
@@ -448,7 +448,8 @@ public class TagParser extends Application{
 		optionsLayout.add(inputHelpButton,5,0);
 		
 		// Results Area
-		results = new Pane();
+		//results = new Pane();
+		results = new TextArea();
 		results.setPrefHeight(100);
 		ScrollPane resultsScroll = new ScrollPane(results);
 		resultsScroll.setFitToWidth(true);

@@ -1,7 +1,7 @@
 package parser.descriptions;
 
 import java.io.File;
-import java.io.IOException;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -722,15 +722,27 @@ public class DescriptionParser {
 	 * Loads the descriptions
 	 */
 	public static void load(){
-		System.out.println("Loading Descriptions");
-		InputStream file = DescriptionParser.class.getClass().getResourceAsStream(filename);
-		if( file == null ){
-			throw new DescriptionParserException("Could not find file: '" + filename + "'");
-		}
+		System.out.println("Loading Descriptions: '" + filename + "'");
+		
 		
 		// Scans file
 		Scanner scan = null;
-		scan = new Scanner(file);
+		if( !filename.contains(":")) {
+			InputStream file = DescriptionParser.class.getResourceAsStream(filename);
+			if( file == null ){
+				throw new DescriptionParserException("Could not find file: '" + filename + "'");
+			}
+			scan = new Scanner(file);
+		}
+		else{
+			try {
+				scan = new Scanner(new File(filename));
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				throw new DescriptionParserException("Could not find file: '" + filename + "'");
+			}
+		}
 		
 		List<String> descriptions = new ArrayList<String>();
 		String currentDescription = PLACEHOLDER;
@@ -963,8 +975,8 @@ public class DescriptionParser {
 		}		
 	}
 
-	public static void setFile(String absolutePath) {
-		filename = absolutePath;
+	public static void setFile(String path) {
+		filename = path;
 	}
 }
 
