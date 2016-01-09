@@ -1,4 +1,4 @@
 6
-2x^1:log:x:25^5
-D:\Mapsters files\old PC\Eclipse\TagParser\src\parser\descriptions\english_descriptions
+2xy:100:x,y:25,2
+D:\Mapsters files\old PC\Eclipse\TagParser\LocalOptions~.txt
 false

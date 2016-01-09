@@ -2,42 +2,44 @@ package parser.descriptions;
 
 import static org.junit.Assert.fail;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.junit.Test;
+
+import parser.Equation;
+import parser.EquationEntry;
+import parser.EquationFactory;
+import parser.Parser;
 
 public class DescriptionParserTests {
 	
 	@Test
 	public void testDescriptions(){
-		compareStrings(DescriptionParser.getDescription(1), "Solve Using BEDMAS.");
-		compareStrings(DescriptionParser.getDescription(2), "Simplify before solving");
+		compareStrings(getDescription(1), "Solve Using BEDMAS");
+		compareStrings(getDescription(2), "Simplify before solving");
 	}	
 	
 	@Test
 	public void testDescriptionsInput(){
 
-		String parsed = DescriptionParser.getDescription(11,"x","(3/2)");
+		String parsed = getDescription(11,"x","(3/2)");
 		compareStrings(parsed, "Replace x with (3/2) in the first equation.");
 		
-		parsed = DescriptionParser.getDescription(9,"x","*","55");
-		compareStrings(parsed, "Find substitution for x by multiplying 55 on both sides.");
+		parsed = getDescription(9,"x","*","55");
+		compareStrings(parsed, "Find substitution for x by multiplying both sides by 55.");
 	}
 	
 	@Test
 	public void testDescriptionsLoops(){
-		String parsed = DescriptionParser.getDescription(6,toArray("2xy"),toArray("100"),toArray("x","y"),toArray("25","2"));
-		compareStrings(parsed, "2xy is the same as 100 by replacing x with 25 and y with 2.");
+		String parsed = getDescription(6,toArray("2xy"),toArray("100"),toArray("x","y"),toArray("25","2"));
+		compareStrings(parsed, "MATH{2xy} is the same as MATH{100} by replacing MATH{x} with MATH{25} and MATH{y} with MATH{2}");
 
-		 parsed = DescriptionParser.getDescription(12);
+		 parsed = getDescription(12);
 		compareStrings(parsed, "TEST 1 2 3 4 5 ");
 		
-		parsed = DescriptionParser.getDescription(15);
-		compareStrings(parsed, "TEST 1 ");
+		parsed = getDescription(15);
+		compareStrings(parsed, "TEST 1");
 
-		parsed = DescriptionParser.getDescription(6,toArray("2x"),toArray("100"),toArray("x"),toArray("50"));
-		compareStrings(parsed, "2x is the same as 100 by replacing x with 50.");
+		parsed = getDescription(6,toArray("2x"),toArray("100"),toArray("x"),toArray("50"));
+		compareStrings(parsed, "MATH{2x} is the same as MATH{100} by replacing MATH{x} with MATH{50}");
 		
 		
 	}
@@ -45,28 +47,28 @@ public class DescriptionParserTests {
 	@Test
 	public void testDescriptionsIF(){
 
-		String parsed = DescriptionParser.getDescription(13);
+		String parsed = getDescription(13);
 		compareStrings(parsed, "TEST 1 is less than two yes so we can be happy.");
 		
-		parsed = DescriptionParser.getDescription(14);
-		compareStrings(parsed, "TEST so we should NOT be happy.");
+		parsed = getDescription(14);
+		compareStrings(parsed, "TEST so we should be happy.");
 	}
 	
 	@Test
 	public void testDescriptionsDefine(){
 
-		String parsed = DescriptionParser.getDescription(16);
+		String parsed = getDescription(16);
 		compareStrings(parsed, "TEST Words");
 		
-		parsed = DescriptionParser.getDescription(17);
+		parsed = getDescription(17);
 		compareStrings(parsed, "TEST Hello World");
 	}
 	
 	@Test
 	public void testDescriptionsNewLine(){
 
-		String parsed = DescriptionParser.getDescription(18);
-		compareStrings(parsed, "TEST ONE\nTEST TWO\nTEST THREE");
+		String parsed = getDescription(18);
+		compareStrings(parsed, "TEST ONE\nTEST TWO\n\nTEST THREE");
 	}
 
 	@Test
@@ -115,6 +117,46 @@ public class DescriptionParserTests {
 		testClosingIndexFailed("<stuff<forgot>>", "<", ">", 5);
 	}
 
+
+	@Test
+	public void testNoUnpassedDescriptions(){
+		
+		// All descriptions start with <<<< now
+		String prefix = "<<<<";
+		DescriptionParser.setDescriptionPrefix(prefix);
+		
+		float maxRuns = 10;
+		
+		int run = 0;
+		while( ++run <= maxRuns ){
+		    String foo = EquationFactory.getRandomAlgebraEquation();
+		    System.out.println("Random Equation: " + foo);
+		    
+		    Equation equation = null;
+		    try{
+		    	equation = Parser.solveEquation(EquationFactory.getEquation(foo));
+		    }catch(Exception e){ run--; continue; }
+		    
+		    for(EquationEntry e : equation.getPostFixElements()){
+		    	String description = e.getDescription();
+		    	if(!description.startsWith(prefix)){
+		    		String error = "\tGiven Equation: '" + foo + "'\n"
+		    				+ "\tCurrent Equation: '" + e.toString() + "'\n"
+		    				+ "\tDescription: '" + description + "'. \n"
+		    				+ "\tEquation: " + equation.toString() + "\n";
+		    		fail("Found description without prefix after " + run + " runs: \n" + error);
+		    	}
+		    }
+		}
+		
+		if(maxRuns == 10){
+			fail("WARNING: Need to test on more than 10 runs!");
+		}
+	}
+	
+	
+	
+	
 	private void compareStrings(String parsed, String string) {
 		if( !parsed.equals(string) ){			
 			fail("Descriptions do not match: \nReceived: '" + parsed + "'\nExpected: '" + string + "'");
@@ -136,9 +178,22 @@ public class DescriptionParserTests {
 		}
 		
 	}
+	
 
 	private static String[] toArray(String... strings) {
 		return strings;
 	}
 
+	
+	public String getDescription(int ID){
+		return DescriptionParser.getDescription(ID).replaceFirst(DescriptionParser.getDescriptionPrefix(), "");
+	}
+	
+	public String getDescription(int ID, String[]... array){
+		return DescriptionParser.getDescription(ID,array).replaceFirst(DescriptionParser.getDescriptionPrefix(), "");
+	}
+	
+	public String getDescription(int ID, String... array){
+		return DescriptionParser.getDescription(ID,array).replaceFirst(DescriptionParser.getDescriptionPrefix(), "");
+	}
 }

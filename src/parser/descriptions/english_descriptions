@@ -69,13 +69,13 @@ Final Answer
 //  <4/> Similar to <3/> with being an array. Only instead contains what the variables are replaced with (6,25,2... etx
 6/
 
-"MATH(<1/>) is the same as <2/> by replacing "
+"MATH{<1/>} is the same as MATH{<2/>} by replacing "
 	<LOOP x |<3[]/>|{
-		MATH(<3[/x]/>) with MATH(<4[/x]/>)
+		<MATH{<3[/x]/>}/> with MATH{<4[/x]/>}
 		<IF /x LESSTHAN |<3[]/>| { 
 			" and "
 		}/>
-	}/>.
+	}/>
 /6
 
 
@@ -114,30 +114,31 @@ Can not solve the equation correctly
 9/
 <DEFINE x {'Unknown Operation supplied <2/>'}/>
 
-<IF <2/> EQUALS * {<DEFINE x {multiplying <3/>}/>}
-	ELSE IF <2/> EQUALS / {<DEFINE x {dividing by <3/>}/>}
-	ELSE IF <2/> EQUALS - {<DEFINE x {subtracting <3/>}/>}
-	ELSE IF <2/> EQUALS + {<DEFINE x {adding <3/>}/>}
-	ELSE IF <2/> EQUALS ^ {<DEFINE x {raising <1/> to the power of <3/>}/>}
+<IF <2/> EQUALS * {<DEFINE x {multiplying both sides by <3/>}/>}
+	ELSE IF <2/> EQUALS / {<DEFINE x {dividing both sides by <3/>}/>}
+	ELSE IF <2/> EQUALS - {<DEFINE x {subtracting <3/> from both sides}/>}
+	ELSE IF <2/> EQUALS + {<DEFINE x {adding <3/> to both sides}/>}
+	ELSE IF <2/> EQUALS ^ {<DEFINE x {raising both sides to the power of <3/>}/>}
 	ELSE IF <2/> EQUALS sqrt {
-		<IF <3/> EQUALS 2 {<DEFINE x {getting the squareroot of <1/>}/>}
-		ELSE IF <3/> EQUALS 3 {<DEFINE x {getting the cuberoot of <1/>}/>}
-		ELSE { <DEFINE x {getting the <3/>'th root of <1/>}/> }/>
+		<IF <3/> EQUALS 2 {<DEFINE x {getting the squareroot of both sides}/>}
+			ELSE IF <3/> EQUALS 3 {<DEFINE x {getting the cuberoot of both sides}/>}
+			ELSE { <DEFINE x {getting the <3/>'th root of both sides}/> }
+		/>
 	}
 	ELSE IF <2/> EQUALS log {
-		<IF <3/> EQUALS 10 {<DEFINE x {getting the natural logorithm}/>}
-		ELSE {<DEFINE x {getting the <3/>'th log}/>}/>
+		<IF <3/> EQUALS 10 {<DEFINE x {getting the natural logorithm of both sides}/>}
+		ELSE {<DEFINE x {getting the <3/>'th log of both sides}/>}/>
 	}
 />
 
-Find substitution for <1/> by </x/> on both sides.
+Find substitution for <1/> by </x/>.
 /9
 
 
 // No Descriptions have been assigned to the equation.
 // This is what is seen as the default Description.
 10/
-No Description
+No Description.
 /10
 
 
@@ -164,7 +165,6 @@ Compare <1/> with <2/> to see if they are the same.
 /19
 
 
-//
 // 5<2
 // We are comparing the left side of the <, with the right side to see if the left is less than the right. 
 // <1/> Left of comparator
@@ -228,9 +228,66 @@ FALSE
 /25
 
 
+//
+// 6/8+10
+// Multiply 10 by 8/8 so we can add 6/8 to 10/1
+//
+//1 whatToMultiply
+//2 multiplier
+//2 leftDescription
+//3 rightDescription;
+//
+26/
+Multiply <1/> by <2/> so we can add <3/> to <4/>.
+/26
 
 
+//
+// When we are simplifying fractions. We always create brackets to indicate what should next.
+// 6/8+10  <---- Started with and will now simplify 10 so it can be added to 6/8
+// 6/8+(10*8)/(1*8) <---- now we need to solve the brackets we just created
+//
+28/
+Solve the brackets before we add the fractions together.
+/28
 
+
+//
+// The program consists of a limit towards how many steps 1 equation can have in order to be solved.
+// This message indicates We can not continue solving the equation as we have reached this limit.
+//
+// This message is usually displayed when loops are occuring and the program is attempting to solve the equation
+//   in such a way that it will then unsolve that step, then attemp to perform the same steps.
+//   Creating an infinite amount of steps to solve the given equation.
+//
+27/
+Exceeded Maximum Solved-steps!!
+/27
+
+
+//
+// The program consists of a limit towards how many times 1 equation can attempt to be solved.
+// This message indicates We can not continue solving the equation as we have reached this limit.
+//
+// Solve attempts and solve steps are different.
+// # Solve attempt is the program attempting to solve the equation using it's algorithm.
+//   If the program is unable to solve the equation. It will modify it's behavior and continue.
+//
+// # Solve step is a successful solve attempt that is displayed with a description in the final output.  
+//
+29/
+Exceeded Maximum Solve Attempts!!
+/29
+
+
+//
+// When the programs algorithm makes a boo-boo and performs the same steps over and over again
+//   and of which do not change the equation. This will never end. So this message is displayed
+//   as a description on the last line and ceases the continuation of solving the equation.
+//
+30/
+Non-stop occuring line!!
+/30
 
 
 
@@ -259,7 +316,7 @@ FALSE
 // Results: 'TEST 1 2 3 4 5 '
 //
 12/
-TEST <LOOP i 5 {/i }/>
+TEST <LOOP i 5 {"/i "}/>
 /12
 
 
@@ -268,7 +325,7 @@ TEST <LOOP i 5 {/i }/>
 // Results: 'TEST 1 is less than two yes so we can be happy.'
 //
 13/
-TEST <IF 1 LESSTHAN 2 {1 is less than two yes }/>so we can be happy.
+TEST <IF 1 LESSTHAN 2 {1 is less than two yes}/> so we can be happy.
 /13
 
 
@@ -319,5 +376,5 @@ TEST <DEFINE x {Hello}/></x/> <DEFINE x {World}/></x/>
 18/
 TEST ONE<NEWLINE/>
 TEST TWO<NEWLINE/><NEWLINE/>
-TEST THREE Hello
+TEST THREE
 /18

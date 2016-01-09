@@ -1,7 +1,8 @@
 package parser.descriptions;
 
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,6 +14,9 @@ public class DescriptionParser {
 	
 	private final static String PLACEHOLDER = "PLACE HOLDER";
 	private static List<String> decriptions = null;
+	
+	// Prefix
+	private static String prefix = "";
 	
 	// Loading variables 
 	private static boolean isSetup = false;
@@ -29,7 +33,7 @@ public class DescriptionParser {
 		// If we have already set up
 		// Make sure the file has not change.
 		// If it has, reread the file
-		if( isSetup && !fileHasChanged() ){
+		if( isSetup && !fileHasChanged()){
 			return;				
 		}
 		load();
@@ -38,47 +42,33 @@ public class DescriptionParser {
 
 	public static String getDescription(int ID){
 		System.out.println("Getting Description " + ID);
-		setup();
-		
-		// Reset
-		savedVariables.clear();
-		
-		String description = getDescriptionFromList(ID);
-		String subbed = substituteVariables(description, new DescriptionNode(), ID);
-
-		System.out.println("Finished Getting Description '" + subbed + "'");
-		return subbed;
+		return getDescription(ID, new DescriptionNode());
 	}
 	
 	public static String getDescription(int ID, String... subs){
 		System.out.println("Getting Description " + ID + ", subs: " + subs);
-		setup();
-		
-		// Reset
-		savedVariables.clear();
-		
-		String description = getDescriptionFromList(ID);
-		String subbed = substituteVariables(description, new DescriptionNode(subs), ID);
-
-		// Remove all "'s
-		subbed = subbed.replaceAll("\"", "");
-		
-		System.out.println("Finished Getting Description '" + subbed + "'");
-		return subbed;
+		return getDescription(ID, new DescriptionNode(subs));
 	}
 
 	public static String getDescription(int ID, String[]... arrays) {
 		System.out.println("Getting Description " + ID + ", arrays: " + arrayToString(arrays));
+		return getDescription(ID, new DescriptionNode(arrays));
+	}
+	
+	private static String getDescription(int ID, DescriptionNode node){
 		setup();
 		
 		// Reset
 		savedVariables.clear();
 
 		String description = getDescriptionFromList(ID);
-		String subbed = substituteVariables(description, new DescriptionNode(arrays), ID);
+		String subbed = substituteVariables(description, node, ID);
 
 		// Remove all "'s
 		subbed = subbed.replaceAll("\"", "");
+		
+		// Add prefix
+		subbed = prefix + subbed;
 		
 		System.out.println("Finished Getting Description '" + subbed + "'");
 		return subbed;
@@ -106,7 +96,7 @@ public class DescriptionParser {
 		while(index != -1){
 			int closingIndex = getClosingIndex(subbed, "<", "/>", index);
 			if( closingIndex == -1 ){
-				throw new DescriptionParserException("Missing closing bracket for variable " + index + " on description " + ID);
+				throw new DescriptionParserException("Missing closing bracket for variable on '" + subbed.substring(index) + "'\n\ton description " + ID);
 			}
 			
 			String substringed = subbed.substring(index+1,closingIndex).trim();
@@ -142,6 +132,9 @@ public class DescriptionParser {
 		else if( string.startsWith("NEWLINE") ){
 			return parseNewLine(string, subs, index, ID);
 		}
+		else if( string.startsWith("MATH") ){
+			return parseMath(string, subs, index, ID);
+		}
 		else if( Character.isDigit(string.charAt(0)) ){
 			return parseInput(string, subs, index, ID);
 		}
@@ -150,6 +143,23 @@ public class DescriptionParser {
 		}
 		
 		throw new DescriptionParserException("Unknown keyword '" + string + "' for description " + ID);
+	}
+
+	private static DescriptionNode parseMath(String string,
+			DescriptionNode subs, int index, int iD) {
+		System.out.println("===== Parsing MATH at index " + index + " '" + string + "' =====");
+		
+		int openBracket = string.indexOf("{");
+		int closeBracket = getClosingIndex(string, "{", "}", openBracket);
+		if( closeBracket == -1 ){
+			throw new DescriptionParserException("No closing bracket for syntax at index " + openBracket);
+		}
+		
+		String function = substituteVariables(string.substring(openBracket+1,closeBracket), subs, iD);
+		
+		String parsed = string.substring(0,openBracket+1) + function + string.substring(closeBracket); 
+		
+		return new DescriptionNode(parsed);
 	}
 
 	private static DescriptionNode parseNewLine(String string,
@@ -637,7 +647,7 @@ public class DescriptionParser {
 		int opening = index;
 		int closing = substring.indexOf(closingSyntax, index);
 		if( closing == -1 ){
-			throw new DescriptionParserException("Can not find closing bracket for " + index);
+			throw new DescriptionParserException("Can not find closing bracket for " + substring + " at " + index + "  with O: '" + openingSyntax + "'" + " C: '" + closingSyntax + "'");
 		}
 		
 
@@ -713,16 +723,14 @@ public class DescriptionParser {
 	 */
 	public static void load(){
 		System.out.println("Loading Descriptions");
-		File file = new File(filename);
+		InputStream file = DescriptionParser.class.getClass().getResourceAsStream(filename);
+		if( file == null ){
+			throw new DescriptionParserException("Could not find file: '" + filename + "'");
+		}
 		
 		// Scans file
 		Scanner scan = null;
-		try {
-			scan = new Scanner(file);
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			return;
-		}
+		scan = new Scanner(file);
 		
 		List<String> descriptions = new ArrayList<String>();
 		String currentDescription = PLACEHOLDER;
@@ -817,10 +825,37 @@ public class DescriptionParser {
 		}
 		
 		// Record when the file was l;ast modified
-		lastModified = file.lastModified();
+		lastModified = new File(filename).lastModified();
 		
 		System.out.println("Successfully loaded Descriptions.");
 		
+	}
+	
+	public static void setDescriptionPrefix(String newPrefix){
+		
+		// Error check
+		if( newPrefix == null || !( newPrefix instanceof String) ){
+			throw new DescriptionParserException("Prefix' must be of type String " + newPrefix);
+		}
+		
+		// Check if they are the same
+		if( prefix.equals(newPrefix) ){
+			return;
+		}
+		
+		prefix = newPrefix;
+		
+		// Reload all the data
+		// This avoids stacked prefix'
+		setup();
+	}
+	
+	public void clearDescriptionPrefix(){
+		setDescriptionPrefix("");;
+	}
+	
+	public static String getDescriptionPrefix(){
+		return prefix;
 	}
 	
 	private static String removeTags(String line) {
@@ -879,13 +914,14 @@ public class DescriptionParser {
 			}
 		}
 		
-		System.out.println("Testing descriptions:");
+		/*System.out.println("Testing descriptions:");
 		System.out.println("== one ==");
 		System.out.println(getDescription(7));
 		
 		System.out.println("== two ==");
 		System.out.println(getDescription(6, "2x", "100", "x", "(3/2)"));
 		System.out.println(getDescription(6, toArray("2x"), toArray("100"), toArray("x","y"), toArray("(3/2)")));
+		*/
 	}
 
 	private static boolean fileHasChanged() {
