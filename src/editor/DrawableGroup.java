@@ -9,12 +9,12 @@ public class DrawableGroup{
     private static final String TAG = DrawableGroup.class.getSimpleName();
 
     final List<DrawableNode> list;
-    int x;
-    int y;
-    int width;
-    int height;
-    int drawingX;
-    int drawingY;
+    double x;
+    double y;
+    double width;
+    double height;
+    double drawingX;
+    double drawingY;
 
     public DrawableGroup(List<DrawableNode> list){
         this.list = list;
@@ -27,26 +27,26 @@ public class DrawableGroup{
         this.drawingY = 0;
     }
 
-    public void moveDrawingBy(int x, int y) {
-        setDrawingX(drawingX + x);
+    public void moveDrawingBy(double d, double y) {
+        setDrawingX(drawingX + d);
         setDrawingY(drawingY + y);
     }
 
-    public int getDrawingX() {
+    public double getDrawingX() {
         return drawingX;
     }
-    public int getDrawingY() {
+    public double getDrawingY() {
         return drawingY;
     }
 
-    public void setDrawingX(int drawingX) {
-        this.drawingX = drawingX;
+    public void setDrawingX(double d) {
+        this.drawingX = d;
         width = Math.max(width,this.drawingX);
         x = Math.min(x, this.drawingX);
     }
 
-    public void setDrawingY(int drawingY) {
-        this.drawingY = drawingY;
+    public void setDrawingY(double d) {
+        this.drawingY = d;
         height = Math.max(height,this.drawingY);
         y = Math.min(y, this.drawingY);
     }
@@ -63,7 +63,7 @@ public class DrawableGroup{
 
             moveDrawingBy(node.getWidth(), 0);
 
-            int nodeBottomY = node.getY()+node.getHeight();
+            double nodeBottomY = node.getY()+node.getHeight();
 
             if( nodeBottomY > height ){
                 moveDrawingBy(0, nodeBottomY);

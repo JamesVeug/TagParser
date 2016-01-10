@@ -7,12 +7,13 @@ import javafx.scene.paint.Color;
  */
 public class DrawableNode{
     private String display;
-    private int x = 0;
-    private int y = 0;
-    private int width = 0; // For division
+    private double x = 0;
+    private double y = 0;
+    private double width = 0; // For division
+    private double height;
     private Color color = Color.BLACK;
+    private String font;
     private int fontSize;
-    private int height;
 
 
     public DrawableNode(char node){
@@ -22,14 +23,18 @@ public class DrawableNode{
     public DrawableNode(String description){
         display = description;
     }
+    
+    public String getText(){
+    	return display;
+    }
 
-    public int setX(int nx){
-        this.x = nx;
+    public double setX(double d){
+        this.x = d;
         return this.x;
     }
 
-    public int setY(int ny){
-        this.y = ny;
+    public double setY(double d){
+        this.y = d;
         return y;
     }
 
@@ -38,18 +43,16 @@ public class DrawableNode{
         this.y += ny;
     }
 
-    public int getX() {
-        return this.x;
-    }
-    public int getY() { return this.y; }
+    public double getX() { return this.x; }
+    public double getY() { return this.y; }
     public String toString(){
         return display;
     }
-    public int getWidth() {
+    public double getWidth() {
         return width;
     }
-    public void setWidth(int width) {
-        this.width = width;
+    public void setWidth(double d) {
+        this.width = d;
     }
     public void setColor(Color color) {
         this.color = color;
@@ -59,12 +62,24 @@ public class DrawableNode{
     public int getFontSize() {
         return fontSize;
     }
-
-    public void setHeight(int height) {
-        this.height = height;
+    
+    public void setFontSize(int size){
+    	this.fontSize = size;
     }
 
-    public int getHeight() {
+    public void setHeight(double d) {
+        this.height = d;
+    }
+
+    public double getHeight() {
         return height;
     }
+
+	public String getFont() {
+		return font;
+	}
+
+	public void setFont(String font) {
+		this.font = font;
+	}
 }

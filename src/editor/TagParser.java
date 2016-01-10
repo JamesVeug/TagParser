@@ -31,6 +31,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
@@ -44,7 +45,7 @@ import parser.descriptions.DescriptionParserException;
 
 public class TagParser extends Application{
 	private TextArea code;
-	private TextArea results;
+	private Pane results;
 	private TextArea errorsTerminal;
 	private TextField descriptionIDField;
 	private TextField inputField;
@@ -315,7 +316,21 @@ public class TagParser extends Application{
 	}
 	
 	public void drawResults(String string){
-		results.setText(string);
+		//results.setText(string);
+		
+		// GRAPHICS
+		DrawableGroupParser.setScreenDimensions((int)results.getWidth(), (int)results.getHeight());
+		//results.getChildren().clear();
+		
+		DrawableGroup group = DrawableGroupParser.getDrawableGroup(string);
+		for(DrawableNode node : group.list){
+			Text text = new Text(node.getText());
+			text.setX(node.getX());
+			text.setY(node.getY()+node.getFontSize());
+			text.setFont(Font.font(node.getFont(), node.getFontSize()));
+			text.setFill(Color.BLACK);
+			results.getChildren().add(text);
+		}
 	}
 
 	private String[] getLocalOptions() {
@@ -448,8 +463,8 @@ public class TagParser extends Application{
 		optionsLayout.add(inputHelpButton,5,0);
 		
 		// Results Area
-		//results = new Pane();
-		results = new TextArea();
+		results = new Pane();
+		//results = new TextArea();
 		results.setPrefHeight(100);
 		ScrollPane resultsScroll = new ScrollPane(results);
 		resultsScroll.setFitToWidth(true);
