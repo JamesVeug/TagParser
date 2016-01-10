@@ -6,6 +6,7 @@ import java.util.List;
 import parser.descriptions.DescriptionParserException;
 import javafx.geometry.Bounds;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 
 /**
@@ -23,7 +24,7 @@ public class DrawableGroupParser {
     public static Color VARIABLE_COLOR = Color.BLACK;
 
     private static final float DEFAULT_SCREENWIDTH = 1024;
-    private static final float DEFAULT_SCREENHEIGHT = 768;
+    private static final float DEFAULT_SCREENHEIGHT = 400;
     private static final int DEFAULT_FONTSIZE = 70;
     private static final int DEFAULT_NODELIP = 20;
     private static final int DEFAULT_LIP_X = 50; // Lip between steps
@@ -104,8 +105,12 @@ public class DrawableGroupParser {
     		}
     		
     		// MATH ...
-    		String math = "MATH " + equation.substring(functionOpen+1,functionClose).trim();
-    		list.add(math);
+    		String math = equation.substring(functionOpen+1,functionClose).trim();
+    		
+    		EquationScanner2 scan = new EquationScanner2(math);
+    		while(scan.hasNext()){
+    			list.add(scan.next());
+    		}    		
     		
     		equation = equation.substring(functionClose+1).trim();
     		
@@ -217,6 +222,7 @@ public class DrawableGroupParser {
         // Assign color
         d.setColor(Color.BLACK);
         d.setFontSize(fontSize);
+        d.setFont("Arial");
     }
 
     /**
@@ -233,7 +239,7 @@ public class DrawableGroupParser {
         DrawableNode d = new DrawableNode(array.get(index));
         assignStyle(d, index, array, nextEntry);
 
-        Bounds bounds = getBounds(d.getText());
+        Bounds bounds = getBounds(d);
         if ( isDivide(d) ){
 
             getDivisionGroup(d, index, array, nextEntry, list, group);
@@ -405,7 +411,7 @@ public class DrawableGroupParser {
         int oldFontSize = fontSize;
         int newFontSize = (int)Math.floor(fontSize/2);
         fontSize = newFontSize;
-        //p.setTextSize(newFontSize);
+        d.setFontSize(newFontSize);
 
 
         // Assign exponent values recursively.
@@ -417,7 +423,7 @@ public class DrawableGroupParser {
 
         // Reset the font size
         fontSize = oldFontSize;
-        //p.setTextSize(oldFontSize);
+        d.setFontSize(oldFontSize);
 
         // Get height of the exponent
         double exponentHeight = 0;
@@ -499,6 +505,10 @@ public class DrawableGroupParser {
         System.out.println( "\tReturning index " + mostLeftX);
         return mostLeftX;
     }
+
+	private static boolean isNull(String current) {
+		return current.equals("?");
+	}
 
     private static boolean isDivide(DrawableNode node) {
 		return node.getText().equals("/");
@@ -611,12 +621,12 @@ public class DrawableGroupParser {
                 }
                 break;
             }
-            /*else if( current instanceof NullString && !(previous instanceof Exponent || previous instanceof Divide)){
+            else if( isNull(current) && !isExponent(previous) && isDivide(previous) ){
                 if( mostLeftX > startingIndex+1 ){
                     mostLeftX--;
                 }
                 break;
-            }*/
+            }
             else{
                 mostLeftX++;
             }
@@ -717,7 +727,8 @@ public class DrawableGroupParser {
      * @param p Paint object that contains the font information
      * @return new Rectangle object that contains the x,y,w,h of the given string.
      */
-    private static Bounds getBounds(String string){
+    private static Bounds getBounds(DrawableNode node){
+    	String string = node.getText();
     	if( string.startsWith("-") ){
             //string += ".";
         }
@@ -727,6 +738,7 @@ public class DrawableGroupParser {
         }
         
     	Text text = new Text(string);
+    	text.setFont(Font.font(node.getFont(), node.getFontSize()));
         return text.getBoundsInLocal();
     }
 }

@@ -82,4 +82,8 @@ public class DrawableNode{
 	public void setFont(String font) {
 		this.font = font;
 	}
+
+	public void setText(String trim) {
+		display = trim;
+	}
 }

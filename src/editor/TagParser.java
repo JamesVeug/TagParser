@@ -320,7 +320,7 @@ public class TagParser extends Application{
 		
 		// GRAPHICS
 		DrawableGroupParser.setScreenDimensions((int)results.getWidth(), (int)results.getHeight());
-		//results.getChildren().clear();
+		results.getChildren().clear();
 		
 		DrawableGroup group = DrawableGroupParser.getDrawableGroup(string);
 		for(DrawableNode node : group.list){
