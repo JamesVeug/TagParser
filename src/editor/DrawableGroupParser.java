@@ -3,11 +3,11 @@ package editor;
 import java.util.ArrayList;
 import java.util.List;
 
-import parser.descriptions.DescriptionParserException;
 import javafx.geometry.Bounds;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import parser.descriptions.DescriptionParserException;
 
 /**
  * Parser to convert an equation to a drawableGroup
@@ -26,7 +26,7 @@ public class DrawableGroupParser {
     private static final float DEFAULT_SCREENWIDTH = 1024;
     private static final float DEFAULT_SCREENHEIGHT = 400;
     private static final int DEFAULT_FONTSIZE = 70;
-    private static final int DEFAULT_NODELIP = 20;
+    private static final int DEFAULT_NODELIP = 00;
     private static final int DEFAULT_LIP_X = 50; // Lip between steps
     private static final int DEFAULT_LIP_Y = 0; // Lip between steps
     //private static final Type DEFAULT_TYPEFACE = Type.create(Type., Type.NORMAL);
@@ -106,11 +106,15 @@ public class DrawableGroupParser {
     		
     		// MATH ...
     		String math = equation.substring(functionOpen+1,functionClose).trim();
+    		list.add("MATH");
+    		list.add("{");
     		
     		EquationScanner2 scan = new EquationScanner2(math);
     		while(scan.hasNext()){
     			list.add(scan.next());
-    		}    		
+    		}
+    		
+    		list.add("}");
     		
     		equation = equation.substring(functionClose+1).trim();
     		
@@ -125,6 +129,11 @@ public class DrawableGroupParser {
     		list.add(equation);
     	}
     	
+    	if( list.get(0).isEmpty() ){
+    		list.remove(0);
+    	}
+    	
+    	System.out.println("Split Equation: " + list);
 		return list;
 	}
     
@@ -183,6 +192,43 @@ public class DrawableGroupParser {
 		
 		return closing;
 	}
+    
+    /**
+	 * Returns an index of the opening bracket for the given closing bracket' index
+	 * @param list List containing the closing and opening brackets
+	 * @param i Index of the closing bracket
+	 * @return
+	 */
+	protected static int getClosingBracketIndex(
+			List<String> list, int index) {
+		//System.out.println("Getting closing Bracket index in '" + list + "' + starting at index " + index);
+
+		int bracketCount = 0;
+		
+		String closingType = list.get(0).equals("(") ? ")" : list.get(0).equals("{") ? "}" : "NULL";
+
+		// (((10/10)*10)/10) where i == 1 and looking for closing 9
+		String e = list.get(index);
+		if( e.equals("NULL") ){
+			throw new RuntimeException("Index not linked to OpeningBracket: " + index + " is linked to " + e);
+		}
+
+		int i = index;
+		while( !isBracket(e) || isOpeningBracket(e) || bracketCount != 1 ){
+			//System.out.println( i + " " + bracketCount + " " + e);
+			if( e.equals(list.get(index)) || e.equals(closingType) ){
+				bracketCount += e.equals(list.get(index)) ? 1 : -1;
+			}
+
+			i++;
+			e = list.get(i).trim();
+			
+		}
+		//System.out.println( i + " " + bracketCount + " " + e + " !!");
+
+
+		return i;
+	}
 
 	private static void reset(){
         // Reset everything in case we have we have a different sized screen!
@@ -225,22 +271,12 @@ public class DrawableGroupParser {
         d.setFont("Arial");
     }
 
-    /**
-     * Creates a new DrawableNode
-     * Gets the x,y coordinates of the given index elements in entry.
-     * @param index index of element we want to create a DrawableNode for
-     * @param array list of Strings we want to get the element from
-     * @param nextEntry following entry after entry
-     * @param list List of DrawableNodes we have already created
-     * @param group DrawableGroup which contains list
-     * @param p painting properties on what to draw
-     */
-    private static void assignXY(int index, List<String> array, List<String> nextEntry, List<DrawableNode> list, DrawableGroup group){
-        DrawableNode d = new DrawableNode(array.get(index));
+    private static void assignMathXY(int index, List<String> array, List<String> nextEntry, List<DrawableNode> list, DrawableGroup group){
+    	DrawableNode d = new DrawableNode(array.get(index));
         assignStyle(d, index, array, nextEntry);
 
         Bounds bounds = getBounds(d);
-        if ( isDivide(d) ){
+    	if ( isDivide(d) ){
 
             getDivisionGroup(d, index, array, nextEntry, list, group);
         }
@@ -268,7 +304,7 @@ public class DrawableGroupParser {
             // Do it in another method
             getExponentGroup(d, index, array, nextEntry, list, group);
         }
-
+        
         // Move to the right
         float currentFontSize = fontSize;
         float expectedFontSize = (getScalar()*DEFAULT_FONTSIZE);
@@ -276,6 +312,76 @@ public class DrawableGroupParser {
 
         int lipDistance = (int)(nodeLip*scaledFontSize);
         group.moveDrawingBy(lipDistance,0);
+    }
+    
+    /**
+     * Creates a new DrawableNode
+     * Gets the x,y coordinates of the given index elements in entry.
+     * @param index index of element we want to create a DrawableNode for
+     * @param array list of Strings we want to get the element from
+     * @param nextEntry following entry after entry
+     * @param list List of DrawableNodes we have already created
+     * @param group DrawableGroup which contains list
+     * @param p painting properties on what to draw
+     */
+    private static void assignXY(int index, List<String> array, List<String> nextEntry, List<DrawableNode> list, DrawableGroup group){
+        DrawableNode d = new DrawableNode(array.get(index));
+        assignStyle(d, index, array, nextEntry);
+
+        Bounds bounds = getBounds(d);
+        if( isMath(d) ){
+        	
+        	int start = index;
+        	int end = getClosingBracketIndex(array, index+1);
+
+        	array.remove(index); // MATH
+        	array.remove(index); // {
+        	
+        	List<String> subList = array.subList(start, end-2);
+        	
+        	
+        	List<DrawableNode> mathNodes = new ArrayList<DrawableNode>();
+        	DrawableGroup mathGroup = new DrawableGroup(mathNodes);
+        	while(mathNodes.size() < subList.size()){
+        		assignMathXY(mathNodes.size(), subList, nextEntry, mathNodes, mathGroup);
+        	}
+        	
+        	// Move new group into the same position
+        	mathGroup.moveBy(group.getDrawingX(), group.getDrawingY());
+        	
+        	// Add nodes to our list
+        	for(int i = 0; i < mathNodes.size(); i++){
+        		list.add(mathNodes.get(i));
+        	}
+        	
+        	// Move drawing position to the end of the box
+        	group.moveDrawingBy(mathGroup.getDrawingX(), mathGroup.getDrawingY());
+        	
+        	array.remove(end-2); // }
+        }
+        else{
+        	d.setX(group.getDrawingX());
+            d.setY(group.getDrawingY());
+            d.setWidth(bounds.getWidth());
+            d.setHeight(bounds.getHeight());
+
+            // Set new X
+            group.moveDrawingBy(bounds.getWidth(), 0);
+
+            if(group.height < d.getY()+d.getHeight()){
+                group.height = d.getY()+d.getHeight();
+            }
+            list.add(d);
+            
+            // Move to the right
+            float currentFontSize = fontSize;
+            float expectedFontSize = (getScalar()*DEFAULT_FONTSIZE);
+            float scaledFontSize = currentFontSize/expectedFontSize;
+
+            int lipDistance = (int)(nodeLip*scaledFontSize);
+            group.moveDrawingBy(lipDistance,0);
+        }
+
     }
 
 	/**
@@ -334,7 +440,7 @@ public class DrawableGroupParser {
         // Create the DrawableNode for each of the denominators
         // Helps for stacked fractions!
         while(list.size() <= mostRightDenominatorIndex ){
-            assignXY(list.size(), entry, nextEntry, list, group);
+        	assignMathXY(list.size(), entry, nextEntry, list, group);
         }
 
 
@@ -417,7 +523,7 @@ public class DrawableGroupParser {
         // Assign exponent values recursively.
         for(int i = startIndex; i <=endIndex; i=list.size()){
             System.out.println( "Exponent Before Size: " + list.size());
-            assignXY(i, entry, nextEntry, list, group);
+            assignMathXY(i, entry, nextEntry, list, group);
             System.out.println( "Exponent After Size: " + list.size());
         }
 
@@ -506,6 +612,11 @@ public class DrawableGroupParser {
         return mostLeftX;
     }
 
+
+	private static boolean isMath(DrawableNode d) {
+		return d.getText().equalsIgnoreCase("Math");
+	}
+	
 	private static boolean isNull(String current) {
 		return current.equals("?");
 	}
@@ -733,6 +844,10 @@ public class DrawableGroupParser {
             //string += ".";
         }
 
+    	if( string.startsWith(" ") ){
+            string = "." + string;
+        }
+    	
         if( string.endsWith(" ") ){
             string += ".";
         }

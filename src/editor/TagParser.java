@@ -31,6 +31,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
@@ -324,9 +325,24 @@ public class TagParser extends Application{
 		
 		DrawableGroup group = DrawableGroupParser.getDrawableGroup(string);
 		for(DrawableNode node : group.list){
+			if( node.getText().equals("^") ){
+				continue;
+			}
+			else if( node.getText().equals("/") ){
+				Line line = new Line();
+				line.setStartX(node.getX());
+				line.setStartY(node.getY()+group.height);
+				line.setEndX(node.getX()+node.getWidth());
+				line.setEndY(node.getY()+group.height);
+				line.setFill(Color.BLACK);
+				results.getChildren().add(line);
+				
+				continue;
+			}
+			
 			Text text = new Text(node.getText());
 			text.setX(node.getX());
-			text.setY(node.getY()+node.getFontSize());
+			text.setY(node.getY()+group.height);
 			text.setFont(Font.font(node.getFont(), node.getFontSize()));
 			text.setFill(Color.BLACK);
 			results.getChildren().add(text);

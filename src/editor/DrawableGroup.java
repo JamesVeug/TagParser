@@ -31,6 +31,15 @@ public class DrawableGroup{
         setDrawingX(drawingX + d);
         setDrawingY(drawingY + y);
     }
+    
+    public void moveBy(double dX, double dY) {
+        x += dX;
+        y += dY;
+        
+        for(int i = 0; i < list.size(); i++){
+        	list.get(i).moveBy(dX, dY);
+        }
+    }
 
     public double getDrawingX() {
         return drawingX;

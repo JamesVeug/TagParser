@@ -38,9 +38,9 @@ public class DrawableNode{
         return y;
     }
 
-    public void moveBy(int nx, int ny){
-        this.x += nx;
-        this.y += ny;
+    public void moveBy(double dX, double dY){
+        this.x += dX;
+        this.y += dY;
     }
 
     public double getX() { return this.x; }
