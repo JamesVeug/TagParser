@@ -6,6 +6,7 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Scanner;
 
 import javafx.application.Application;
@@ -14,26 +15,23 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
+import javafx.scene.control.ButtonBar.ButtonData;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
 import javafx.scene.shape.Line;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
@@ -51,9 +49,10 @@ public class TagParser extends Application{
 	private Pane results;
 	private TextArea errorsTerminal;
 	private TextField descriptionIDField;
+	private Button inputHelpButton;
+	private ScrollPane resultsScroll;
+	private ScrollPane codeScroll;
 	
-	private Background inputErrorColor = new Background(new BackgroundFill(Paint.valueOf("#FFC4C4"), new CornerRadii(20), new Insets(5)));
-	private Background inputColor = new Background(new BackgroundFill(Paint.valueOf("White"), new CornerRadii(20), new Insets(5)));
 	private TextField inputField;
 	private Button compileButton;
 	
@@ -61,9 +60,10 @@ public class TagParser extends Application{
 	private final String localCodeFileName = "./LocalCode~.txt";
 	private final String localOptionsFileName = "./LocalOptions~.txt";
 
-	private String currentFile = localCodeFileName;
+	private String currentFile = null;
 	
-	final String EXAMPLE_CODE = ""
+	// Example Code for when there are no local files supplied
+	public static final String EXAMPLE_CODE = ""
 			+ "// If we are given the equation 2x=6 \n"
 			+ "// And we manage to get the correct answer, we will get the following description \n"
 			+ "// <2x> is the same as <6> by replacing <x> with <3>. \n"
@@ -78,10 +78,40 @@ public class TagParser extends Application{
 			+ "/6";
 	
 
-	final String EXAMPLE_DESCRIPTIONID = "6";
-	final String EXAMPLE_INPUTS = "2xy:100:x,y:25,2";
+	public static final String EXAMPLE_DESCRIPTIONID = "6";
+	public static final String EXAMPLE_INPUTS = "2xy:100:x,y:25,2";
 	
+	// Tooltips
+	public static final List<Tooltip> tooltips = new ArrayList<Tooltip>();
+	static{
+		
+		// Code
+		tooltips.add(new Tooltip("Code Pane\nWrite your code for the descriptions here!"));
+		
+		// Compile Button
+		tooltips.add(new Tooltip("Compiles the code and displays the output with the given inputs in the results Pane.\nSaves a backup version of the code into a local file."));
+		
+		// ID Field
+		tooltips.add(new Tooltip("Description ID Field\nEnter a valid description ID from the Code Pane to be displayed in the Results Pane.\nOnly a single number greater than -1 can be entered."));
+		
+		// Input Field
+		tooltips.add(new Tooltip("Input Field\nTest the selected description with certain Input to see the outcome. \nPress the '?' for more info."));
+		
+		// Help Button
+		tooltips.add(new Tooltip("Get more help on the Input Field."));
+		
+		// Results
+		tooltips.add(new Tooltip("Results Pane\nOutput from the code will be displayed here when the Compile button is pressed. The outcome is determined by the given Description ID and input field."));
+		
+		// Error Terminal
+		tooltips.add(new Tooltip("Error Terminal\nWhen errors occur in the Code Pane, Description ID Field or Input Field. The Errors will be displayed here to help you solve the problem."));
+	}
+	
+	public static String INPUT_HELP_DESCRIPTION = "";
+
+	public boolean needsSaving = false;
 	public boolean isCodeEdited = false;
+	public boolean toolTipsEnabled = false;
 	public Font CompileButtonNOTEditedFont = Font.font("Verdana", FontWeight.NORMAL, 10);
 	public Font CompileButtonEditedFont = Font.font("Verdana", FontWeight.BOLD, 10);
 	public Font errorTerminalFont = Font.font("Arial", FontWeight.BOLD, 10);
@@ -178,8 +208,12 @@ public class TagParser extends Application{
 		return temp;
 	}
 	
+	/**
+	 * Checks the inputs entered by the user to see if they have any problems iwth them
+	 * @param inputs
+	 * @return true if there are no errors
+	 */
 	private boolean checkInputsForErrors(String[][] inputs) {
-		System.out.println("checking errors");
 		
 		try{
 			
@@ -246,6 +280,8 @@ public class TagParser extends Application{
 		saveFile.setOnAction(new SaveFileListener());
 		MenuItem saveAs = new MenuItem("Save As");
 		saveAs.setOnAction(new SaveAsListener());
+		MenuItem toggleTooltips = new MenuItem("Toggle Tooltips");
+		toggleTooltips.setOnAction(new ToggleTooltipsListener());
 		MenuItem quitFile = new MenuItem("Quit");
 		quitFile.setOnAction(new QuitListener());
 		
@@ -253,32 +289,10 @@ public class TagParser extends Application{
 		file.getItems().add(loadFile);
 		file.getItems().add(saveFile);
 		file.getItems().add(saveAs);
+		file.getItems().add(toggleTooltips);
 		file.getItems().add(quitFile);
 		menuBar.getMenus().add(file);
 		mainLayout.setTop(menuBar);
-	}
-
-	
-	
-	private class LoadFileListener implements EventHandler<ActionEvent>{
-
-		public void handle(ActionEvent arg0) {
-			JFileChooser chooser = new JFileChooser(".");
-			int selected = chooser.showOpenDialog(null);
-			if( selected == JFileChooser.CANCEL_OPTION ){
-				return;
-			}
-			
-			File file = chooser.getSelectedFile();
-			if(file.exists()){
-				code.setText(getTextFromFile(file));
-				try {
-					currentFile = file.getCanonicalPath();
-					changeTitle();
-				} catch (IOException e) {e.printStackTrace();}
-			}
-		}
-		
 	}
 	
 	private String getTextFromFile(File file){
@@ -301,9 +315,10 @@ public class TagParser extends Application{
 		return "Failed to load file";
 	}
 	
-	private class SaveAsListener implements EventHandler<ActionEvent>{
-
-		public void handle(ActionEvent arg0) {
+	private void saveFile(){
+		
+		// Make sure we have a file selected
+		if( currentFile == null ){
 			JFileChooser chooser = new JFileChooser(".");
 			int selected = chooser.showSaveDialog(null);
 			if( selected == JFileChooser.CANCEL_OPTION ){
@@ -312,18 +327,14 @@ public class TagParser extends Application{
 			
 			File file = chooser.getSelectedFile();
 			currentFile = file.getAbsolutePath();
-			changeTitle();
-			saveFile();
 		}
-		
-	}
 	
-	private void saveFile(){
 		
-		// Save our current work to the local file
-		saveLocal();
-				
 		try {
+			
+			// Save our current work to the local file
+			saveLocal();
+			
 			// Only saves what we can see in the compile panel
 			// Save to the file we want to use
 			PrintWriter writer = new PrintWriter(currentFile);
@@ -339,9 +350,17 @@ public class TagParser extends Application{
 			compileButton.setFont(CompileButtonNOTEditedFont);
 			isCodeEdited = false;
 			changeTitle();
+
 			
-			//JOptionPane.showMessageDialog(descriptionIDField, "Successfully saved!", "Message", 0);
+			needsSaving = false;
 			
+			// Popup Window
+			Alert alert = new Alert(AlertType.INFORMATION);
+			alert.setTitle("Saved");
+			alert.setHeaderText("Your work has been saved Successfully.");
+			alert.showAndWait();
+
+
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			//JOptionPane.showMessageDialog(descriptionIDField, "Failed to Save!", "Message", 0);	
@@ -372,26 +391,31 @@ public class TagParser extends Application{
 			
 			try{
 				String parsedCode = DescriptionParser.getDescription(descriptionID,inputs);
-				compileButton.setFont(CompileButtonNOTEditedFont);
-				isCodeEdited = false;
 				
 				// Display results
 				drawResults(parsedCode);
+				
+				// Reset
 				errorsTerminal.setText("");
+				compileButton.setFont(CompileButtonNOTEditedFont);
+				isCodeEdited = false;
 			}catch(DescriptionParserException e){
 				displayErrorMessage(e);
 			}
 		} catch (IOException e) {e.printStackTrace();}
 	}
 	
-	public void drawResults(String string){
-		//results.setText(string);
+	/**
+	 * Draws the outcome of the selected Description on the screen.
+	 * @param parsedCode Description taken from the DescriptionParser and needs to be displayed on the screen.
+	 */
+	public void drawResults(String parsedCode){
 		
 		// GRAPHICS
 		DrawableGroupParser.setScreenDimensions((int)results.getWidth(), (int)results.getHeight());
 		results.getChildren().clear();
 		
-		DrawableGroup group = DrawableGroupParser.getDrawableGroup(string);
+		DrawableGroup group = DrawableGroupParser.getDrawableGroup(parsedCode);
 		for(DrawableNode node : group.list){
 			if( node.getText().equals("^") ){
 				continue;
@@ -424,77 +448,36 @@ public class TagParser extends Application{
 		return options;
 	}
 	
-	private class SaveFileListener implements EventHandler<ActionEvent>{
-
-		public void handle(ActionEvent arg0) {
-			saveFile();
+	private boolean checkFileIsSaved(){
+		
+		if( !needsSaving ){
+			return true;
 		}
 		
-	}
-	
-	private class NewFileListener implements EventHandler<ActionEvent>{
+		Alert alert = new Alert(AlertType.WARNING);
+		alert.setTitle("Unsaved");
+		alert.setHeaderText("There is unsaved work. Do you want to save before continuing?");
 
-		public void handle(ActionEvent arg0) {
-			//results.setText(""); // TODO
-			code.setText("");
-		}
-		
-	}
-	
-	private class QuitListener implements EventHandler<ActionEvent>{
+		ButtonType buttonYes = new ButtonType("Yes");
+		ButtonType buttonNo = new ButtonType("No");
+		ButtonType buttonCancel = new ButtonType("Cancel", ButtonData.CANCEL_CLOSE);
 
-		public void handle(ActionEvent arg0) {
-			System.exit(0);
-		}
-		
-	}
-	
-	private class CompileListener implements EventHandler<ActionEvent>{
+		alert.getButtonTypes().setAll(buttonYes, buttonNo, buttonCancel);
 
-		public void handle(ActionEvent arg0) {
-			compileCode();
-		}		
-	}
-	
-	public class IDListener implements ChangeListener<String> {
-		public void changed(ObservableValue<? extends String> arg0,
-				String arg1, String arg2) {
-			int difference = arg2.length() - arg1.length();
-			if( difference > 0 ){
-				String newExtension = "";
-				
-				// Check if we need to edit
-				for(int i = arg1.length(); i < arg2.length(); i++){
-					char c = arg2.charAt(i);
-					if(Character.isDigit(c)){
-						newExtension += c;
-					}
-				}
-				
-				descriptionIDField.setText(arg1+newExtension);
-			}
-		}
-
-	}
-
-	
-	public class CodeListener implements ChangeListener<String> {
-
-		public void changed(ObservableValue<? extends String> arg0,
-				String arg1, String arg2) {
-			if( Math.abs(arg1.length()-arg2.length()) > 2 ){
-				return;
-			}
+		Optional<ButtonType> result = alert.showAndWait();
+		if (result.get() == buttonYes){
+		    saveFile();
 			
-			compileButton.setFont(CompileButtonEditedFont);
-			isCodeEdited = true;
-			changeTitle();
+		} else if (result.get() == buttonNo) {
+		    // Do nothing
+			
+		} 
+		else{
+			return false;
 		}
-
-	}
-
-	public static void main(String[] args){
-		launch(args);
+		
+		// We can continue. No Errors
+		return true;
 	}
 
 	public void displayErrorMessage(DescriptionParserException e) {
@@ -502,7 +485,6 @@ public class TagParser extends Application{
 		for(StackTraceElement i : e.getStackTrace()){
 			errorsTerminal.appendText(i.toString() + "\n");
 		}
-		//results.setText(""); // TODO
 		e.printStackTrace();
 	}
 
@@ -524,11 +506,11 @@ public class TagParser extends Application{
 		code.setPrefWidth(1000000);
 		code.setPrefHeight(600);
 		code.textProperty().addListener(new CodeListener());
-		ScrollPane codeScroll = new ScrollPane(code);
+		codeScroll = new ScrollPane(code);
 		//BorderedTitledPane codePane = new BorderedTitledPane("Code Pane", code);
 		//codePane.setStyle("titled-address");
 		codeScroll.setFitToWidth(true);
-		
+
 		
 		// Options Area
 		GridPane optionsLayout = new GridPane();
@@ -538,7 +520,8 @@ public class TagParser extends Application{
 		descriptionIDField = new TextField(EXAMPLE_DESCRIPTIONID);
 		descriptionIDField.textProperty().addListener(new IDListener());
 		inputField = new TextField();
-		Button inputHelpButton = new Button("?");
+		inputHelpButton = new Button("?");
+		inputHelpButton.setOnAction(new InputHelpButtonListener());
 		optionsLayout.add(compileButton,0,0);
 		optionsLayout.add(new Text("  ID:  "),1,0);
 		optionsLayout.add(descriptionIDField,2,0);
@@ -548,9 +531,8 @@ public class TagParser extends Application{
 		
 		// Results Area
 		results = new Pane();
-		//results = new TextArea();
 		results.setPrefHeight(100);
-		ScrollPane resultsScroll = new ScrollPane(results);
+		resultsScroll = new ScrollPane(results);
 		resultsScroll.setFitToWidth(true);
 
 		layout.addRow(0,code);
@@ -579,6 +561,28 @@ public class TagParser extends Application{
 		inputField.setText(startingValues[1]);
 		changeTitle();
 		compileButton.setFont(isCodeEdited ? CompileButtonNOTEditedFont : CompileButtonEditedFont);
+		toggleToolTips();
+		importInputHelp();
+	}
+
+	/**
+	 * Load the help information for the Input Field from a file.
+	 */
+	private void importInputHelp() {
+		
+		try {
+			Scanner scan = new Scanner(new File("inputhelp.txt"));
+			
+			INPUT_HELP_DESCRIPTION = "";
+			while(scan.hasNextLine()){
+				INPUT_HELP_DESCRIPTION += scan.nextLine() + "\n";
+				
+			}
+			
+			scan.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private Pane setupTerminal() {
@@ -597,12 +601,9 @@ public class TagParser extends Application{
 		Menu options = new Menu("Options");
 		MenuItem clear = new MenuItem("Clear");
 		clear.setOnAction(new EventHandler<ActionEvent>(){
-			public void handle(ActionEvent arg0) {
-				errorsTerminal.setText("");
-			};
+			public void handle(ActionEvent arg0) { errorsTerminal.setText(""); };
 		});
 		options.getItems().add(clear);
-		
 		menubar.getMenus().add(options);
 		terminalLayout.setTop(menubar);
 		
@@ -710,20 +711,178 @@ public class TagParser extends Application{
 		return options;
 	}
 	
-	/** Places content in a bordered pane with a title. */
-	private class BorderedTitledPane extends StackPane {
-	  BorderedTitledPane(String titleString, Node content) {
-	    Label title = new Label(" " + titleString + " ");
-	    title.getStyleClass().add("bordered-titled-title");
-	    StackPane.setAlignment(title, Pos.TOP_CENTER);
+	public void toggleToolTips(){
+		for(int i = 0; i < tooltips.size(); i++){			
+			Tooltip tooltip = toolTipsEnabled ? tooltips.get(i) : null;
+			
+			// 0 Code
+			// 1 Compile Button
+			// 2 ID Field
+			// 3 Input Field
+			// 4 Help Button
+			// 5 Results
+			// 6 Error Terminal
+			switch(i){
+				case 0: code.setTooltip(tooltip); break;
+				case 1: compileButton.setTooltip(tooltip); break;
+				case 2: descriptionIDField.setTooltip(tooltip); break;
+				case 3: inputField.setTooltip(tooltip); break;
+				case 4: inputHelpButton.setTooltip(tooltip); break;
+				case 5: resultsScroll.setTooltip(tooltip); break;
+				case 6: errorsTerminal.setTooltip(tooltip); break;
+			}
+		}
+	}
+	
+	private class SaveFileListener implements EventHandler<ActionEvent>{
+		public void handle(ActionEvent arg0) {
+			saveFile();
+		}
+	}
+	
+	private class NewFileListener implements EventHandler<ActionEvent>{
+		public void handle(ActionEvent arg0) {
+			
+			if( currentFile == null ){
+				saveFile();
+			}
+			else if( !checkFileIsSaved() ){
+				return;
+			}
+			
+			// Nohing being displayed
+			results.getChildren().clear();
+			
+			// No code
+			code.setText("");
+			
+			// Saved file
+			currentFile = null;
+			needsSaving = false;
+			isCodeEdited = false;
+			
+			// No Errors
+			errorsTerminal.clear();
+			
+			// Chance Title
+			changeTitle();
+		}		
+	}
+	
+	private class QuitListener implements EventHandler<ActionEvent>{
 
-	    StackPane contentPane = new StackPane();
-	    content.getStyleClass().add("bordered-titled-content");
-	    contentPane.getChildren().add(content);
+		public void handle(ActionEvent arg0) {
+			if( checkFileIsSaved() ){
+				System.exit(0);
+			}
+		}		
+	}
+	
+	private class CompileListener implements EventHandler<ActionEvent>{
 
-	    getStyleClass().add("bordered-titled-border");
-	    getChildren().addAll(title, contentPane);
-	  }
+		public void handle(ActionEvent arg0) {
+			compileCode();
+		}		
+	}
+
+	
+	private class SaveAsListener implements EventHandler<ActionEvent>{
+		public void handle(ActionEvent arg0) {
+			JFileChooser chooser = new JFileChooser(".");
+			int selected = chooser.showSaveDialog(null);
+			if( selected == JFileChooser.CANCEL_OPTION ){
+				return;
+			}
+			
+			File file = chooser.getSelectedFile();
+			currentFile = file.getAbsolutePath();
+			changeTitle();
+			saveFile();
+		}
+	}
+	
+	private class ToggleTooltipsListener implements EventHandler<ActionEvent>{
+		public void handle(ActionEvent arg0) {
+			toolTipsEnabled = !toolTipsEnabled;
+			toggleToolTips();
+		}
+	}
+	
+	private class LoadFileListener implements EventHandler<ActionEvent>{
+		public void handle(ActionEvent arg0) {
+			JFileChooser chooser = new JFileChooser(".");
+			int selected = chooser.showOpenDialog(null);
+			if( selected == JFileChooser.CANCEL_OPTION ){
+				return;
+			}
+			
+			File file = chooser.getSelectedFile();
+			if(file.exists()){
+				code.setText(getTextFromFile(file));
+				try {
+					currentFile = file.getCanonicalPath();
+					changeTitle();
+				} catch (IOException e) {e.printStackTrace();}
+			}
+		}
+		
+	}
+	
+	private class InputHelpButtonListener implements EventHandler<ActionEvent>{
+		public void handle(ActionEvent arg0) {
+			Alert alert = new Alert(AlertType.INFORMATION);
+			alert.setTitle("Input Field Help");
+			alert.setHeaderText(" ");
+			
+			TextArea textArea = new TextArea(INPUT_HELP_DESCRIPTION);
+			textArea.setEditable(false);
+			textArea.setWrapText(true);
+			alert.getDialogPane().setContent(textArea);
+
+			alert.showAndWait();
+		}
+	}
+	
+	public class IDListener implements ChangeListener<String> {
+		public void changed(ObservableValue<? extends String> arg0,
+				String arg1, String arg2) {
+			int difference = arg2.length() - arg1.length();
+			if( difference > 0 ){
+				String newExtension = "";
+				
+				// Check if we need to edit
+				for(int i = arg1.length(); i < arg2.length(); i++){
+					char c = arg2.charAt(i);
+					if(Character.isDigit(c)){
+						newExtension += c;
+					}
+				}
+				
+				descriptionIDField.setText(arg1+newExtension);
+			}
+		}
+
+	}
+
+	
+	public class CodeListener implements ChangeListener<String> {
+
+		public void changed(ObservableValue<? extends String> arg0,
+				String arg1, String arg2) {
+			if( Math.abs(arg1.length()-arg2.length()) > 2 ){
+				return;
+			}
+			
+			compileButton.setFont(CompileButtonEditedFont);
+			isCodeEdited = true;
+			needsSaving = true;
+			changeTitle();
+		}
+
+	}
+
+	public static void main(String[] args){
+		launch(args);
 	}
 }
 

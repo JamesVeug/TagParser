@@ -26,7 +26,7 @@ public class DrawableGroupParser {
     private static final float DEFAULT_SCREENWIDTH = 1024;
     private static final float DEFAULT_SCREENHEIGHT = 400;
     private static final int DEFAULT_FONTSIZE = 70;
-    private static final int DEFAULT_NODELIP = 00;
+    private static final int DEFAULT_NODELIP = 0;
     private static final int DEFAULT_LIP_X = 50; // Lip between steps
     private static final int DEFAULT_LIP_Y = 0; // Lip between steps
     //private static final Type DEFAULT_TYPEFACE = Type.create(Type., Type.NORMAL);
@@ -116,7 +116,7 @@ public class DrawableGroupParser {
     		
     		list.add("}");
     		
-    		equation = equation.substring(functionClose+1).trim();
+    		equation = equation.substring(functionClose+1);
     		
     		// Save how far we have substringed the equation for error referencing.
     		currentIndex += functionClose;
@@ -850,13 +850,13 @@ public class DrawableGroupParser {
             //string += ".";
         }
 
-    	if( string.startsWith(" ") ){
+    	/*if( string.startsWith(" ") ){
             string = "." + string;
         }
     	
         if( string.endsWith(" ") ){
             string += ".";
-        }
+        }*/
         
     	Text text = new Text(string);
     	text.setFont(Font.font(node.getFont(), node.getFontSize()));

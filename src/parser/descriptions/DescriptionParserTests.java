@@ -4,11 +4,6 @@ import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
-import parser.Equation;
-import parser.EquationEntry;
-import parser.EquationFactory;
-import parser.Parser;
-
 public class DescriptionParserTests {
 	
 	@Test
@@ -118,7 +113,7 @@ public class DescriptionParserTests {
 	}
 
 
-	@Test
+	/*@Test
 	public void testNoUnpassedDescriptions(){
 		
 		// All descriptions start with <<<< now
@@ -152,7 +147,7 @@ public class DescriptionParserTests {
 		if(maxRuns == 10){
 			fail("WARNING: Need to test on more than 10 runs!");
 		}
-	}
+	}*/
 	
 	
 	

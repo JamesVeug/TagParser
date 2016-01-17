@@ -1,0 +1,41 @@
+The Input Field is primarily for each individual description. Each description has different inputs.
+Some descriptions do not require inputs, where as some others have have 5 different inputs.
+Each input is a representation of something that has been solved in an equation.
+			
+Example 1:
+2+4*5
+Solve using BEDMAS
+			
+The above Equation (2+4*5) needs to be solved using BEDMAS. So '*' needs to be solved before +.
+The Description for this equation (Solve using BEDMAS) does not require any inputs to be displayed. So anything put in the Inputs Field will never be used.
+			
+Example 2:
+x=8
+Replace x with 8 in the first equation.
+			
+The above is an example of an Equation that requires inputs in order to be displayed. In this case it requires two inputs.
+The Inputs given are 'x' and '8'. Where as the rest of the description will always be the same regardless of the inputs.
+			
+Example 3:
+11/
+Replace <1/> with <2/> in the first equation.
+/11
+You can tell what descriptions require inputs by opening a .tag file and looking for a tag similar to '<1/>'; but the 1 can be replaced with any number, starting at 1 and increasing.
+			
+In the TagParser. There is an InputField where you can test what the description will look like.
+You can enter a single input into this field by typing it in.
+To enter more than one input, you will need to seperate the inputs using a colon ( : ).
+			
+Example 4:
+Description:  'Compare <1/> with <2/> to see if they are the same.'
+Input Field:  '3x:25'
+Final Output: 'Compare 3x with 25 to see if they are the same.'
+			
+			
+Example 5:
+Input Field:  '2xy:100:x,y:25,2'
+Final Output: '2xy is the same as 100 by replacing x with 25 and y with 2.'
+			
+Some descriptions can have sub-inputs such as Description 6. (Example 5)
+This description has 4 inputs. (2xy),(100),(x,y) and (25,2). But for this section we will focus on the last two.
+x and y are considered to be sub-inputs for the main 3rd input and are seperated via a comma ( , ).
