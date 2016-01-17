@@ -25,14 +25,16 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
+import javafx.scene.paint.Paint;
 import javafx.scene.shape.Line;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
@@ -49,6 +51,9 @@ public class TagParser extends Application{
 	private Pane results;
 	private TextArea errorsTerminal;
 	private TextField descriptionIDField;
+	
+	private Background inputErrorColor = new Background(new BackgroundFill(Paint.valueOf("#FFC4C4"), new CornerRadii(20), new Insets(5)));
+	private Background inputColor = new Background(new BackgroundFill(Paint.valueOf("White"), new CornerRadii(20), new Insets(5)));
 	private TextField inputField;
 	private Button compileButton;
 	
@@ -145,6 +150,7 @@ public class TagParser extends Application{
 		}
 		
 		
+		
 		/*System.out.print("Double Split: ");
 		for(String[] d : doubleSplit){
 			System.out.print("(");
@@ -172,6 +178,62 @@ public class TagParser extends Application{
 		return temp;
 	}
 	
+	private boolean checkInputsForErrors(String[][] inputs) {
+		System.out.println("checking errors");
+		
+		try{
+			
+			for(int i = 0; i < inputs.length; i++){
+				String[] a = inputs[i];
+				
+				for( int j = 0; j < a.length; j++){
+					String s = a[j];
+					
+					// Check for closing brackets (......)
+					int openBracketIndex = s.indexOf("(");
+					while( openBracketIndex != -1 ){
+						int closingBracket = DrawableGroupParser.getClosingIndex(s, "(", ")", openBracketIndex);
+						if( closingBracket == -1 ){
+							displayInputError("Missing closing bracket for input " + (i+1) + " and item " + (j+1) + ".");
+							System.out.println("Finished checking for errors");
+							return false;
+						}
+						
+						openBracketIndex = s.indexOf("(", openBracketIndex+1);
+					}
+					
+	
+					// Check for closing curly brackets {......}
+					int openCurlyBracketIndex = s.indexOf("{");
+					while( openCurlyBracketIndex != -1 ){
+						int closingBracket = DrawableGroupParser.getClosingIndex(s, "{", "}", openCurlyBracketIndex);
+						if( closingBracket == -1 ){
+							displayInputError("Missing closing curly bracket for input " + (i+1) + " and item " + (j+1) + ".");
+							System.out.println("Finished checking for errors");
+							return false;
+						}
+						
+						openCurlyBracketIndex = s.indexOf("(", openCurlyBracketIndex+1);
+					}
+				}
+			}
+		
+		}catch(RuntimeException e){
+			displayInputError(e.getMessage());
+			System.out.println("Finished checking for errors");
+			return false;
+		}
+		
+		// No Errors
+		System.out.println("Finished checking for errors");
+		return true;
+	}
+	
+	private void displayInputError(String error){
+		//inputField.setBackground(inputErrorColor);
+		errorsTerminal.setText("Input Error: \n" + error);
+	}
+
 	private void setupMenu(BorderPane mainLayout, Stage primaryStage) {
 		MenuBar menuBar = new MenuBar();
 		menuBar.prefWidthProperty().bind(primaryStage.widthProperty());
@@ -301,6 +363,12 @@ public class TagParser extends Application{
 			String[] options = getLocalOptions();
 			String[][] inputs = getInputs(options[1]);
 			int descriptionID = getDescriptionID(options[0]);
+			
+			// Check each input for errors
+			boolean noerrors = checkInputsForErrors(inputs);
+			if( !noerrors ){
+				return;
+			}
 			
 			try{
 				String parsedCode = DescriptionParser.getDescription(descriptionID,inputs);

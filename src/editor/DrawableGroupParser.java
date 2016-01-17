@@ -153,7 +153,7 @@ public class DrawableGroupParser {
 		int opening = index;
 		int closing = substring.indexOf(closingSyntax, index);
 		if( closing == -1 ){
-			throw new DescriptionParserException("Can not find closing bracket for " + substring + " at " + index + "  with O: '" + openingSyntax + "'" + " C: '" + closingSyntax + "'");
+			throw new DescriptionParserException("Can not find closing bracket for '" + substring + "' at index " + index + " with Syntax: '" + openingSyntax + "'" + ", '" + closingSyntax + "'");
 		}
 		
 
@@ -201,30 +201,35 @@ public class DrawableGroupParser {
 	 */
 	protected static int getClosingBracketIndex(
 			List<String> list, int index) {
-		//System.out.println("Getting closing Bracket index in '" + list + "' + starting at index " + index);
+		System.out.println("Getting closing Bracket index in '" + list.subList(index, list.size()) + "' + starting at index " + index);
 
-		int bracketCount = 0;
 		
-		String closingType = list.get(0).equals("(") ? ")" : list.get(0).equals("{") ? "}" : "NULL";
+		String closingType = list.get(index).equals("(") ? ")" : list.get(index).equals("{") ? "}" : "NULL";
+		System.out.println("openType: " + list.get(index) + " closingType: " + closingType);
 
 		// (((10/10)*10)/10) where i == 1 and looking for closing 9
-		String e = list.get(index);
-		if( e.equals("NULL") ){
-			throw new RuntimeException("Index not linked to OpeningBracket: " + index + " is linked to " + e);
+		String start = list.get(index).trim(); 
+		if( closingType.equals("NULL") ){
+			throw new RuntimeException("Index not linked to OpeningBracket: " + index + " is linked to " + start);
 		}
 
-		int i = index;
-		while( !isBracket(e) || isOpeningBracket(e) || bracketCount != 1 ){
-			//System.out.println( i + " " + bracketCount + " " + e);
-			if( e.equals(list.get(index)) || e.equals(closingType) ){
-				bracketCount += e.equals(list.get(index)) ? 1 : -1;
-			}
 
+		int bracketCount = 1;
+		int i = index;
+		String e = list.get(i).trim();
+		while( bracketCount != 0 && (i+1) < list.size()){
+			
+			// Start to the right of the opening bracket
 			i++;
 			e = list.get(i).trim();
 			
+			// Increment if we are looking at a bracket
+			if( e.equals(start) || e.equals(closingType) ){
+				bracketCount += e.equals(start) ? 1 : -1;
+			}			
 		}
 		//System.out.println( i + " " + bracketCount + " " + e + " !!");
+		//System.out.println( "Final: " + list.subList(index, i+1));
 
 
 		return i;
@@ -338,6 +343,7 @@ public class DrawableGroupParser {
         	array.remove(index); // {
         	
         	List<String> subList = array.subList(start, end-2);
+        	System.out.println("Assigning Math XY: " + subList);
         	
         	
         	List<DrawableNode> mathNodes = new ArrayList<DrawableNode>();

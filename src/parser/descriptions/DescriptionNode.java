@@ -48,10 +48,10 @@ public class DescriptionNode {
 	
 	public String getSub(int index, int subindex){
 		if( index-1 >= strings.size() ){
-			throw new DescriptionParserException("Could not obtain Array.\n\tIndex " + index + " exceeded max string input size " + strings.size() + "\n\t" + toString());
+			throw new DescriptionParserException("Could not obtain Input.\n\tIndex " + index + " exceeded max string input size " + strings.size() + "\n\t" + toString());
 		}
 		else if( subindex-1 >= strings.get(index-1).length ){
-			throw new DescriptionParserException("Could not obtain String from array.\n\tIndex " + subindex + " exceeded max string input size " + strings.get(index-1).length + "\n\t" + toString());
+			throw new DescriptionParserException("Could not obtain String from Input.\n\tIndex " + subindex + " exceeded max string input size " + strings.get(index-1).length + "\n\t" + toString());
 		}
 		
 		return strings.get(index-1)[subindex-1];
@@ -59,7 +59,7 @@ public class DescriptionNode {
 	
 	public String[] getArray(int index){
 		if( index-1 >= strings.size() ){
-			throw new DescriptionParserException("Could not obtain Array.\n\tIndex " + index + " exceeded max string input size " + strings.size() + "\n\t" + toString());
+			throw new DescriptionParserException("Could not obtain Input.\n\tIndex " + index + " exceeded max string input size " + strings.size() + "\n\t" + toString());
 		}
 		
 		return strings.get(index-1);
