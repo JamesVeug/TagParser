@@ -65,6 +65,7 @@ public class DrawableGroupParser {
 
         // use the group to keep track of the side of the size of the drawing
         DrawableGroup group = new DrawableGroup(drawableNodes);
+        
         group.setDrawingX(xLipOffset);
         group.setDrawingY(yLipOffset);
         for (int i = 0; i < array.size(); i=drawableNodes.size()) {
@@ -73,6 +74,15 @@ public class DrawableGroupParser {
             // Adds at least 1 to the drawableNodes list
             assignXY(i, array, nextEntry, drawableNodes, group);
         }
+        
+        DrawableNode node = new DrawableNode("no");
+        node.setX(0);
+        node.setY(0);
+        node.setFontSize(20);
+        node.setFont("Arial");
+        node.setColor(Color.BLACK);
+        
+        //drawableNodes.add(node);
         return group;
     }
 
@@ -85,7 +95,7 @@ public class DrawableGroupParser {
     	List<String> list = new ArrayList<String>();
     	
     	int currentIndex = 0;
-    	int index = equation.indexOf("MATH");
+    	int index = equation.trim().toUpperCase().indexOf("MATH");
     	while(index != -1){
     		
     		// .....MATH.....
@@ -121,7 +131,7 @@ public class DrawableGroupParser {
     		// Save how far we have substringed the equation for error referencing.
     		currentIndex += functionClose;
     		
-    		index = equation.indexOf("MATH");
+    		index = equation.trim().toUpperCase().indexOf("MATH");
     	}
     	
     	equation = equation.trim();
@@ -620,7 +630,7 @@ public class DrawableGroupParser {
 
 
 	private static boolean isMath(DrawableNode d) {
-		return d.getText().equalsIgnoreCase("Math");
+		return d.getText().trim().toLowerCase().startsWith("math");
 	}
 	
 	private static boolean isNull(String current) {
