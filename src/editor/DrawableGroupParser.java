@@ -26,6 +26,7 @@ public class DrawableGroupParser {
     private static final float DEFAULT_SCREENWIDTH = 1024;
     private static final float DEFAULT_SCREENHEIGHT = 400;
     private static final int DEFAULT_FONTSIZE = 70;
+    private static final int DEFAULT_MINFONTSIZE = 30;
     private static final int DEFAULT_NODELIP = 0;
     private static final int DEFAULT_LIP_X = 50; // Lip between steps
     private static final int DEFAULT_LIP_Y = 0; // Lip between steps
@@ -37,6 +38,7 @@ public class DrawableGroupParser {
     private static int divisionSize;
     private static int divisionLip;
     private static int nodeLip; // lip between numbers or operators... ( 2 + 5 )
+    private static int minfontSize;
     private static int fontSize;
     private static int xLipOffset;
     private static int yLipOffset;
@@ -249,6 +251,7 @@ public class DrawableGroupParser {
         // Reset everything in case we have we have a different sized screen!
         float sizeScalar = getScalar();
         fontSize = (int)(sizeScalar*DEFAULT_FONTSIZE);
+        minfontSize = (int)(sizeScalar*DEFAULT_MINFONTSIZE);
         divisionLip = (int)(sizeScalar*DEFAULT_DIVISION_LIP);
         divisionSize = (int)(sizeScalar*DEFAULT_DIVISION_STROKE_HEIGHT);
         nodeLip = (int)(sizeScalar*DEFAULT_NODELIP);
@@ -476,7 +479,7 @@ public class DrawableGroupParser {
                 break;
             }
 
-            lowestDenominatorY = Math.min(lowestDenominatorY, node.getY()-node.getHeight());
+            lowestDenominatorY = Math.min(lowestDenominatorY, node.getY());
             highestDenominatorY = Math.max(highestDenominatorY, node.getY());
         }
         double denominatorHeight = highestDenominatorY-lowestDenominatorY;
@@ -484,7 +487,7 @@ public class DrawableGroupParser {
         // Assign new Y below the line
         for(int i = index+1; i <= mostRightDenominatorIndex; i++){
             DrawableNode node = list.get(i);
-            node.setY(node.getY()+denominatorHeight);
+            node.setY(node.getY()+denominatorHeight+divisionLip);
         }
 
 
@@ -519,6 +522,15 @@ public class DrawableGroupParser {
         group.setDrawingY(startDrawingY);
     }
 
+    /**
+     * Get the exponent group that we will be raising the constant to
+     * @param d Exponent Node
+     * @param exponentIndex Where the Exponent node is in the list
+     * @param entry Current list we are converting to Nodes
+     * @param nextEntry Next list in the equation that is being solved
+     * @param list Already created nodes 
+     * @param group Group to add the nodes to
+     */
 	private static void getExponentGroup(DrawableNode d, int exponentIndex, List<String> entry, List<String> nextEntry, List<DrawableNode> list, DrawableGroup group){
         System.out.println( "Exponent Equation: " + entry);
 
@@ -532,6 +544,7 @@ public class DrawableGroupParser {
         // Shrink font!
         int oldFontSize = fontSize;
         int newFontSize = (int)Math.floor(fontSize/2);
+        newFontSize = Math.max(minfontSize, newFontSize);
         fontSize = newFontSize;
         d.setFontSize(newFontSize);
 
@@ -548,19 +561,23 @@ public class DrawableGroupParser {
         d.setFontSize(oldFontSize);
 
         // Get height of the exponent
-        double exponentHeight = 0;
+        double minY = Double.MAX_VALUE;
+        double maxY = Double.MIN_NORMAL;
         for( int i = startIndex; i <= endIndex; i++){
             DrawableNode node = list.get(i);
             System.out.println( "Size: " + node.getY());
-            exponentHeight = Math.max(exponentHeight, node.getY()+node.getHeight()-d.getY()+d.getHeight());
+            minY = Math.min(minY,node.getY());
+            maxY = Math.max(maxY,node.getY()+node.getHeight());
         }
 
+        double exponentHeight = maxY - d.getY();
+        
         // Move all the values up by half of the exponent node's height, and by half the total height of the exponents.
-        double changeInHeight = d.getHeight()/2+exponentHeight/2;
+        double changeInHeight = d.getHeight()+exponentHeight;
         System.out.println( "Change : " + changeInHeight);
         for( int i = startIndex; i <= endIndex; i++){
             DrawableNode node = list.get(i);
-            node.setY(node.getY()-changeInHeight);
+            node.setY(node.getY()-exponentHeight);
         }
     }
 
