@@ -571,6 +571,8 @@ public class DrawableGroupParser {
         }
 
         double exponentHeight = maxY - d.getY();
+        //group.y = Math.min(group.y, minY);
+        //group.height = Math.max(group.height, maxY-minY);
         
         // Move all the values up by half of the exponent node's height, and by half the total height of the exponents.
         double changeInHeight = d.getHeight()+exponentHeight;

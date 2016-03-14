@@ -978,5 +978,14 @@ public class DescriptionParser {
 	public static void setFile(String path) {
 		filename = path;
 	}
+
+	/**
+	 * Returns how many descriptions have been loaded.
+	 * @return Integer between -1 and Integer.Max_Value() 
+	 */
+	public static int size() {
+		setup();
+		return decriptions.size();
+	}
 }
 

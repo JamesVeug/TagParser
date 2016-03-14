@@ -33,6 +33,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
@@ -415,7 +416,20 @@ public class TagParser extends Application{
 		DrawableGroupParser.setScreenDimensions((int)results.getWidth(), (int)results.getHeight());
 		results.getChildren().clear();
 		
+		
+		
 		DrawableGroup group = DrawableGroupParser.getDrawableGroup(parsedCode);
+		
+		Rectangle rec = new Rectangle();
+		rec.setX(group.x);
+		rec.setY(group.y);
+		rec.setWidth(group.width);
+		rec.setHeight(group.height);
+		rec.setStroke(Color.RED);
+		rec.setFill(Color.WHITE);
+		
+		results.getChildren().add(rec);
+		
 		for(DrawableNode node : group.list){
 			if( node.getText().equals("^") ){
 				continue;
@@ -480,6 +494,10 @@ public class TagParser extends Application{
 		return true;
 	}
 
+	private void displayErrorMessage(String string) {
+		displayErrorMessage(new DescriptionParserException(string));
+	}
+	
 	public void displayErrorMessage(DescriptionParserException e) {
 		errorsTerminal.setText(e.getMessage() + "\n\n\n");
 		for(StackTraceElement i : e.getStackTrace()){
@@ -642,6 +660,7 @@ public class TagParser extends Application{
 			start[0] = options[0];
 			start[1] = options[1];
 			currentFile = options[2];
+			DescriptionParser.setFile(currentFile);
 			isCodeEdited = "TRUE".equalsIgnoreCase(options[3]);
 		}
 		else{
@@ -651,12 +670,16 @@ public class TagParser extends Application{
 			
 			try {
 				currentFile = localOptions.getCanonicalPath();
+				DescriptionParser.setFile(currentFile);
 			} catch (IOException e) {e.printStackTrace();}
 		}
 
 		return start;
 	}
 
+	/**
+	 * Changes the title of the program so suit the current status of the file being edited.
+	 */
 	private void changeTitle() {
 
 		String editedSuffix = (isCodeEdited ? " - *" : "");
@@ -669,7 +692,7 @@ public class TagParser extends Application{
 		else{
 			editedSuffix = " - " + currentFile + (isCodeEdited ? "*" : "");
 		}
-
+		
 		primaryStage.setTitle(programTitle + editedSuffix);
 	}
 
@@ -796,6 +819,7 @@ public class TagParser extends Application{
 			
 			File file = chooser.getSelectedFile();
 			currentFile = file.getAbsolutePath();
+			DescriptionParser.setFile(currentFile);
 			changeTitle();
 			saveFile();
 		}
@@ -821,7 +845,10 @@ public class TagParser extends Application{
 				code.setText(getTextFromFile(file));
 				try {
 					currentFile = file.getCanonicalPath();
+					DescriptionParser.setFile(currentFile);
+					saveLocal();
 					changeTitle();
+					errorsTerminal.clear();
 				} catch (IOException e) {e.printStackTrace();}
 			}
 		}
@@ -860,8 +887,31 @@ public class TagParser extends Application{
 				
 				descriptionIDField.setText(arg1+newExtension);
 			}
+			
+			//
+			// Checks for ID
+			//
+			
+			// Check we have an ID
+			if( arg2.length() > 0 ){
+			
+				int maxDescriptions;
+				try{
+					maxDescriptions = DescriptionParser.size();
+				}catch(DescriptionParserException e ){
+					displayErrorMessage(e);
+					return;
+				}				
+				
+				int enteredNumber = (int)Integer.parseInt(arg2);
+				
+				// Check the ID is in the list
+				if( enteredNumber < 0 || maxDescriptions <= enteredNumber){
+					displayErrorMessage("DescriptionID Error: ID must be between 0 and " + maxDescriptions + "! (" + enteredNumber + ")");
+				}
+				
+			}
 		}
-
 	}
 
 	
